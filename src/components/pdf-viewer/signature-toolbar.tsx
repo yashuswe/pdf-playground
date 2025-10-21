@@ -4,7 +4,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
 import { Badge } from "../ui/badge";
-import { PenTool, Type, Calendar, Trash2, Check, X } from "lucide-react";
+import { PenTool } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,7 +44,7 @@ export function SignatureToolbar({
 }: SignatureToolbarProps) {
   const [isCreating, setIsCreating] = useState(false);
   const [signatureType, setSignatureType] = useState<"full-name" | "initials">(
-    "full-name",
+    "full-name"
   );
   const [fullName, setFullName] = useState("");
   const [signatureStyle, setSignatureStyle] = useState("cursive");
@@ -85,14 +85,6 @@ export function SignatureToolbar({
     setFullName("");
   };
 
-  const getCurrentDate = () => {
-    return new Date().toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   const renderSignaturePreview = () => {
     if (!fullName.trim()) return null;
 
@@ -130,13 +122,17 @@ export function SignatureToolbar({
               >
                 <PenTool className="h-4 w-4 mr-1" />
                 Signature
+                <Badge variant="secondary" className="ml-2 text-xs">
+                  Limited
+                </Badge>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Create Digital Signature</DialogTitle>
+                <DialogTitle>Create Digital Signature (Limited)</DialogTitle>
                 <DialogDescription>
-                  Create a signature using your full name or initials
+                  Create a text signature using your full name or initials.
+                  Place signatures only in blank spaces on the PDF.
                 </DialogDescription>
               </DialogHeader>
 
@@ -209,18 +205,6 @@ export function SignatureToolbar({
               </div>
             </DialogContent>
           </Dialog>
-
-          <Button
-            variant={selectedTool === "date" ? "default" : "ghost"}
-            size="sm"
-            onClick={() =>
-              onToolSelect(selectedTool === "date" ? null : "date")
-            }
-            className="h-8"
-          >
-            <Calendar className="h-4 w-4 mr-1" />
-            Date
-          </Button>
         </div>
 
         <Separator orientation="vertical" className="h-6" />
@@ -242,7 +226,7 @@ export function SignatureToolbar({
                     className="text-xs"
                     style={{
                       fontFamily: signatureStyles.find(
-                        (s) => s.value === sig.style,
+                        (s) => s.value === sig.style
                       )?.font,
                       fontStyle: sig.style === "cursive" ? "italic" : "normal",
                     }}
@@ -263,12 +247,14 @@ export function SignatureToolbar({
         <Separator orientation="vertical" className="h-6" />
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {selectedTool === "date" && (
-            <span>Current date: {getCurrentDate()}</span>
-          )}
-          {selectedTool === "signature" && <span>Click to add signature</span>}
           {selectedTool?.startsWith("signature-") && (
-            <span>Click to place signature</span>
+            <Badge variant="outline" className="text-xs">
+              <PenTool className="h-3 w-3 mr-1" />
+              Click on PDF to place signature
+            </Badge>
+          )}
+          {!selectedTool && signatures.length === 0 && (
+            <span>Create a signature to get started</span>
           )}
         </div>
       </div>

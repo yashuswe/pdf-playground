@@ -4,15 +4,19 @@ import { SignupForm } from "./auth/signup-form";
 import { Dashboard } from "./dashboard";
 import { Homepage } from "./homepage";
 import { PDFViewer } from "./pdf-viewer/pdf-viewer";
-import { PDFTronViewer } from "./pdf-viewer/pdftron-viewer";
-import { PDFEditor } from "./pdf-editor/pdf-editor";
 import { FileConverter } from "./tools/file-converter";
 import { PDFCompressor } from "./tools/pdf-compressor";
+import { PDFSplit } from "./tools/pdf-split";
+import { PDFMerge } from "./tools/pdf-merge";
+import { PDFSignature } from "./tools/pdf-signature";
+import { PDFWatermark } from "./tools/pdf-watermark";
 import { Header } from "./layout/header";
 import { PDFFile } from "./dashboard/recent-files";
 import { Toaster } from "./ui/sonner";
 import { toast } from "sonner";
 import { configurePDFWorker } from "../lib/pdf-worker";
+import type { AppView, HeaderAppView } from "../types/app";
+import { listFiles } from "../lib/api/file-management";
 
 interface User {
   name: string;
@@ -20,15 +24,6 @@ interface User {
 }
 
 type AuthMode = "login" | "signup";
-type AppView =
-  | "auth"
-  | "homepage"
-  | "dashboard"
-  | "pdf-viewer"
-  | "pdf-editor"
-  | "convert"
-  | "compress";
-type HeaderAppView = "auth" | "homepage" | "dashboard" | "pdf-viewer";
 
 export default function App() {
   const [user, setUser] = useState<User | null>({
@@ -39,37 +34,35 @@ export default function App() {
   const [currentView, setCurrentView] = useState<AppView>("homepage");
   const [selectedFile, setSelectedFile] = useState<PDFFile | null>(null);
   const [darkMode, setDarkMode] = useState(false);
-  const [useFallbackViewer, setUseFallbackViewer] = useState(false);
-  const [files, setFiles] = useState<PDFFile[]>([
-    {
-      id: "sample",
-      name: "Sample_PDF_Document.pdf",
-      size: "2.4 MB",
-      lastModified: "2024-01-15",
-      annotations: 5,
-    },
-    {
-      id: "2",
-      name: "Financial_Report_Q4.pdf",
-      size: "1.8 MB",
-      lastModified: "2024-01-14",
-      annotations: 2,
-    },
-    {
-      id: "3",
-      name: "Meeting_Minutes_Jan.pdf",
-      size: "892 KB",
-      lastModified: "2024-01-13",
-      annotations: 0,
-    },
-    {
-      id: "4",
-      name: "User_Manual_v2.pdf",
-      size: "5.2 MB",
-      lastModified: "2024-01-12",
-      annotations: 8,
-    },
-  ]);
+  const [files, setFiles] = useState<PDFFile[]>([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+
+  // Load files from backend
+  const loadFilesFromBackend = async () => {
+    setIsLoadingFiles(true);
+    try {
+      const fileList = await listFiles();
+      // Sort by creation date (most recent first)
+      const sortedFiles = fileList.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      const mappedFiles: PDFFile[] = sortedFiles.map((file) => ({
+        id: file.file_id,
+        name: file.filename,
+        size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+        lastModified: new Date(file.created_at).toISOString().split("T")[0],
+        annotations: 0, // Backend doesn't track annotations yet
+      }));
+      setFiles(mappedFiles);
+    } catch (error: any) {
+      console.error("Failed to load files from backend:", error);
+      // Silently fail to not disrupt the user experience
+      // The continue working section will just show empty
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
 
   useEffect(() => {
     // Configure PDF.js worker first
@@ -81,6 +74,9 @@ export default function App() {
       setUser(JSON.parse(savedUser));
       setCurrentView("homepage");
     }
+
+    // Load files from backend
+    loadFilesFromBackend();
   }, []);
 
   useEffect(() => {
@@ -118,28 +114,18 @@ export default function App() {
     toast.success("Logged out successfully");
   };
 
-  const handleFileUpload = (uploadedFiles: File[]) => {
-    const newFiles: PDFFile[] = uploadedFiles.map((file, index) => ({
-      id: `${Date.now()}-${index}`,
-      name: file.name,
-      size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-      lastModified: new Date().toISOString().split("T")[0],
-      annotations: 0,
-    }));
-
-    setFiles((prev) => [...newFiles, ...prev]);
-    toast.success(`${uploadedFiles.length} file(s) uploaded successfully`);
+  const handleFileUpload = async (uploadedFiles: File[]) => {
+    // Files are uploaded to backend by the upload component
+    // We just need to refresh the file list after upload
+    // Add a small delay to ensure backend has processed the upload
+    setTimeout(() => {
+      loadFilesFromBackend();
+    }, 500);
   };
 
   const handleOpenFile = (file: PDFFile) => {
     setSelectedFile(file);
-    setUseFallbackViewer(false); // Reset fallback state for new file
     setCurrentView("pdf-viewer");
-  };
-
-  const handleOpenEditor = (file: PDFFile) => {
-    setSelectedFile(file);
-    setCurrentView("pdf-editor");
   };
 
   const handleCloseViewer = () => {
@@ -157,10 +143,16 @@ export default function App() {
   };
 
   const handleNavigateToTool = (tool: string) => {
-    if (tool === "convert") {
-      setCurrentView("convert");
-    } else if (tool === "compress") {
-      setCurrentView("compress");
+    const validTools = [
+      "convert",
+      "compress",
+      "split",
+      "merge",
+      "signature",
+      "watermark",
+    ];
+    if (validTools.includes(tool)) {
+      setCurrentView(tool as AppView);
     }
   };
 
@@ -190,32 +182,10 @@ export default function App() {
   if (currentView === "pdf-viewer" && selectedFile) {
     return (
       <>
-        {!useFallbackViewer ? (
-          <PDFTronViewer
-            file={selectedFile}
-            onClose={handleCloseViewer}
-            onSwitchToEditor={() => setCurrentView("pdf-editor")}
-            onFallback={() => setUseFallbackViewer(true)}
-          />
-        ) : (
-          <PDFViewer
-            file={selectedFile}
-            onClose={handleCloseViewer}
-            onSwitchToEditor={() => setCurrentView("pdf-editor")}
-          />
-        )}
-        <Toaster />
-      </>
-    );
-  }
-
-  if (currentView === "pdf-editor" && selectedFile) {
-    return (
-      <>
-        <PDFEditor
+        <PDFViewer
           file={selectedFile}
           onClose={handleCloseViewer}
-          onSwitchToViewer={() => setCurrentView("pdf-viewer")}
+          onSwitchToEditor={undefined}
         />
         <Toaster />
       </>
@@ -239,7 +209,7 @@ export default function App() {
             files={files}
             onFileUpload={handleFileUpload}
             onOpenFile={handleOpenFile}
-            onOpenEditor={handleOpenEditor}
+            onOpenEditor={handleOpenFile}
             onNavigateToTool={handleNavigateToTool}
           />
         </div>
@@ -286,6 +256,82 @@ export default function App() {
     );
   }
 
+  if (currentView === "split") {
+    return (
+      <>
+        <div className="min-h-screen bg-background">
+          <Header
+            user={user!}
+            onLogout={handleLogout}
+            darkMode={darkMode}
+            onToggleDarkMode={() => setDarkMode(!darkMode)}
+            onNavigate={handleNavigateToView}
+            currentView={currentView as HeaderAppView}
+          />
+          <PDFSplit />
+        </div>
+        <Toaster />
+      </>
+    );
+  }
+
+  if (currentView === "merge") {
+    return (
+      <>
+        <div className="min-h-screen bg-background">
+          <Header
+            user={user!}
+            onLogout={handleLogout}
+            darkMode={darkMode}
+            onToggleDarkMode={() => setDarkMode(!darkMode)}
+            onNavigate={handleNavigateToView}
+            currentView={currentView as HeaderAppView}
+          />
+          <PDFMerge />
+        </div>
+        <Toaster />
+      </>
+    );
+  }
+
+  if (currentView === "signature") {
+    return (
+      <>
+        <div className="min-h-screen bg-background">
+          <Header
+            user={user!}
+            onLogout={handleLogout}
+            darkMode={darkMode}
+            onToggleDarkMode={() => setDarkMode(!darkMode)}
+            onNavigate={handleNavigateToView}
+            currentView={currentView as HeaderAppView}
+          />
+          <PDFSignature />
+        </div>
+        <Toaster />
+      </>
+    );
+  }
+
+  if (currentView === "watermark") {
+    return (
+      <>
+        <div className="min-h-screen bg-background">
+          <Header
+            user={user!}
+            onLogout={handleLogout}
+            darkMode={darkMode}
+            onToggleDarkMode={() => setDarkMode(!darkMode)}
+            onNavigate={handleNavigateToView}
+            currentView={currentView as HeaderAppView}
+          />
+          <PDFWatermark />
+        </div>
+        <Toaster />
+      </>
+    );
+  }
+
   return (
     <>
       <div className="min-h-screen bg-background">
@@ -302,7 +348,7 @@ export default function App() {
           files={files}
           onFileUpload={handleFileUpload}
           onOpenFile={handleOpenFile}
-          onOpenEditor={handleOpenEditor}
+          onOpenEditor={handleOpenFile}
           onDeleteFile={handleDeleteFile}
         />
       </div>

@@ -68,7 +68,7 @@ export function TextEditorDialog({
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderlined, setIsUnderlined] = useState(false);
   const [alignment, setAlignment] = useState<"left" | "center" | "right">(
-    "left",
+    "left"
   );
   const [width, setWidth] = useState([200]);
   const [height, setHeight] = useState([100]);

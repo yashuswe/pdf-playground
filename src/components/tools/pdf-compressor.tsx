@@ -85,13 +85,13 @@ export function PDFCompressor() {
 
   const calculateCompressedSize = (
     originalSize: number,
-    quality: number,
+    quality: number
   ): number => {
     // Simulate compression ratio based on quality
     const compressionRatio = (100 - quality) / 100;
     return Math.max(
       originalSize * (0.3 + compressionRatio * 0.5),
-      originalSize * 0.1,
+      originalSize * 0.1
     );
   };
 
@@ -113,7 +113,7 @@ export function PDFCompressor() {
     }
 
     const selectedLevel = compressionLevels.find(
-      (level) => level.value === compressionLevel,
+      (level) => level.value === compressionLevel
     );
     const quality = selectedLevel?.quality || 75;
 
@@ -150,7 +150,7 @@ export function PDFCompressor() {
             };
           }
           return j;
-        }),
+        })
       );
     }, 800);
 
@@ -160,12 +160,12 @@ export function PDFCompressor() {
         clearInterval(interval);
         setCompressionJobs((prev) =>
           prev.map((j) =>
-            j.id === job.id ? { ...j, status: "completed", progress: 100 } : j,
-          ),
+            j.id === job.id ? { ...j, status: "completed", progress: 100 } : j
+          )
         );
         toast.success("PDF compressed successfully");
       },
-      Math.random() * 2000 + 2000,
+      Math.random() * 2000 + 2000
     );
   };
 
@@ -200,7 +200,7 @@ export function PDFCompressor() {
   };
 
   const currentLevel = compressionLevels.find(
-    (level) => level.value === compressionLevel,
+    (level) => level.value === compressionLevel
   );
   const previewQuality =
     compressionLevel === "custom"
@@ -214,7 +214,7 @@ export function PDFCompressor() {
         ((selectedFile.size -
           calculateCompressedSize(selectedFile.size, previewQuality)) /
           selectedFile.size) *
-          100,
+          100
       )
     : 0;
 
@@ -225,6 +225,9 @@ export function PDFCompressor() {
         <p className="text-muted-foreground">
           Reduce PDF file size while maintaining quality
         </p>
+        <Badge variant="outline" className="mt-2">
+          Demo Mode - Backend integration coming soon
+        </Badge>
       </div>
 
       <Card>

@@ -20,14 +20,14 @@ export async function GET(request: NextRequest) {
     } else {
       return NextResponse.json(
         { error: "Worker file not found" },
-        { status: 404 },
+        { status: 404 }
       );
     }
   } catch (error) {
     console.error("Error serving PDF worker:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

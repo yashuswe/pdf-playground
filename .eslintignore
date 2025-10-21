@@ -1,0 +1,30 @@
+# Dependencies
+node_modules
+package-lock.json
+
+# Build outputs
+.next
+out
+dist
+build
+
+# Public assets
+public
+
+# Config files
+next-env.d.ts
+next.config.js
+next.config.ts
+postcss.config.mjs
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.*
+
+# IDE
+.vscode
+.idea
+

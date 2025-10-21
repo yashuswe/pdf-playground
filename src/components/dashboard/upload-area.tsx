@@ -2,7 +2,9 @@ import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
-import { Upload, FileText } from "lucide-react";
+import { Upload, FileText, Loader2 } from "lucide-react";
+import { uploadFile } from "@/lib/api";
+import { toast } from "sonner";
 
 interface UploadAreaProps {
   onFileUpload: (files: File[]) => void;
@@ -11,6 +13,7 @@ interface UploadAreaProps {
 
 export function UploadArea({ onFileUpload, className }: UploadAreaProps) {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -22,31 +25,51 @@ export function UploadArea({ onFileUpload, className }: UploadAreaProps) {
     setIsDragOver(false);
   }, []);
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragOver(false);
+  const handleDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
 
-      const files = Array.from(e.dataTransfer.files).filter(
-        (file) => file.type === "application/pdf",
-      );
+    const files = Array.from(e.dataTransfer.files).filter(
+      (file) => file.type === "application/pdf"
+    );
 
-      if (files.length > 0) {
-        onFileUpload(files);
-      }
-    },
-    [onFileUpload],
-  );
+    if (files.length > 0) {
+      await handleUpload(files);
+    }
+  }, []);
 
   const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files || []);
       if (files.length > 0) {
-        onFileUpload(files);
+        await handleUpload(files);
       }
     },
-    [onFileUpload],
+    []
   );
+
+  const handleUpload = async (files: File[]) => {
+    setIsUploading(true);
+    const uploadedFiles: File[] = [];
+
+    try {
+      for (const file of files) {
+        try {
+          await uploadFile(file);
+          uploadedFiles.push(file);
+          toast.success(`${file.name} uploaded successfully`);
+        } catch (error: any) {
+          toast.error(`Failed to upload ${file.name}: ${error.message}`);
+        }
+      }
+
+      if (uploadedFiles.length > 0) {
+        onFileUpload(uploadedFiles);
+      }
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <Card>
@@ -57,7 +80,7 @@ export function UploadArea({ onFileUpload, className }: UploadAreaProps) {
             isDragOver
               ? "border-primary bg-primary/5"
               : "border-muted-foreground/25 hover:border-muted-foreground/50",
-            className,
+            className
           )}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -74,10 +97,14 @@ export function UploadArea({ onFileUpload, className }: UploadAreaProps) {
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild>
+              <Button asChild disabled={isUploading}>
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Choose Files
+                  {isUploading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileText className="h-4 w-4 mr-2" />
+                  )}
+                  {isUploading ? "Uploading..." : "Choose Files"}
                 </label>
               </Button>
               <input
@@ -87,6 +114,7 @@ export function UploadArea({ onFileUpload, className }: UploadAreaProps) {
                 multiple
                 className="hidden"
                 onChange={handleFileInput}
+                disabled={isUploading}
               />
             </div>
             <p className="text-xs text-muted-foreground">

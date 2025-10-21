@@ -57,7 +57,7 @@ export function PDFEditor({ file, onClose, onSwitchToViewer }: PDFEditorProps) {
 
         // Check if text was already extracted from PDFTron
         const preExtractedText = localStorage.getItem(
-          `extracted-text-${file.id}`,
+          `extracted-text-${file.id}`
         );
         if (preExtractedText) {
           // Parse the pre-extracted text into pages
@@ -71,14 +71,14 @@ export function PDFEditor({ file, onClose, onSwitchToViewer }: PDFEditorProps) {
               editableText: pageText.trim(),
               originalText: pageText.trim(),
               isEditing: false,
-            }),
+            })
           );
 
           setPages(extractedPages);
           setTotalPages(extractedPages.length);
           setIsLoading(false);
           toast.success(
-            `Loaded pre-extracted text from ${extractedPages.length} pages`,
+            `Loaded pre-extracted text from ${extractedPages.length} pages`
           );
           return;
         }
@@ -132,7 +132,7 @@ export function PDFEditor({ file, onClose, onSwitchToViewer }: PDFEditorProps) {
 
         // Group text items by approximate lines based on Y position
         const textItems: any[] = textContent.items.filter(
-          (item: any) => "str" in item,
+          (item: any) => "str" in item
         );
 
         // Sort by Y position (descending) and then X position (ascending)
@@ -212,8 +212,8 @@ export function PDFEditor({ file, onClose, onSwitchToViewer }: PDFEditorProps) {
       prev.map((page) =>
         page.pageNumber === pageNumber
           ? { ...page, editableText: newText }
-          : page,
-      ),
+          : page
+      )
     );
     setHasChanges(true);
   };
@@ -223,8 +223,8 @@ export function PDFEditor({ file, onClose, onSwitchToViewer }: PDFEditorProps) {
       prev.map((page) =>
         page.pageNumber === pageNumber
           ? { ...page, isEditing: !page.isEditing }
-          : page,
-      ),
+          : page
+      )
     );
   };
 
@@ -233,8 +233,8 @@ export function PDFEditor({ file, onClose, onSwitchToViewer }: PDFEditorProps) {
       prev.map((page) =>
         page.pageNumber === pageNumber
           ? { ...page, text: page.editableText, isEditing: false }
-          : page,
-      ),
+          : page
+      )
     );
     toast.success(`Page ${pageNumber} saved`);
   };
@@ -248,8 +248,8 @@ export function PDFEditor({ file, onClose, onSwitchToViewer }: PDFEditorProps) {
               editableText: page.originalText,
               text: page.originalText,
             }
-          : page,
-      ),
+          : page
+      )
     );
     toast.success(`Page ${pageNumber} reset to original`);
   };
@@ -616,7 +616,7 @@ export function PDFEditor({ file, onClose, onSwitchToViewer }: PDFEditorProps) {
                       onChange={(e) =>
                         handlePageTextChange(
                           currentPageData.pageNumber,
-                          e.target.value,
+                          e.target.value
                         )
                       }
                       className="min-h-96 font-mono text-sm"

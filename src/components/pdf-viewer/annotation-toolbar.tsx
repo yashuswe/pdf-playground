@@ -98,7 +98,7 @@ export function AnnotationToolbar({
                 size="sm"
                 onClick={() =>
                   onAnnotationSelect(
-                    selectedAnnotation === tool.id ? null : tool.id,
+                    selectedAnnotation === tool.id ? null : tool.id
                   )
                 }
                 className="h-8"
@@ -153,7 +153,7 @@ export function AnnotationToolbar({
             className="h-8"
             onClick={() =>
               onAnnotationSelect(
-                selectedAnnotation === "comment" ? null : "comment",
+                selectedAnnotation === "comment" ? null : "comment"
               )
             }
           >

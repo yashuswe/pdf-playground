@@ -1,11 +1,5 @@
 import { useState, useRef } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
@@ -14,18 +8,21 @@ import {
   FileText,
   Upload,
   Zap,
-  Palette,
-  Download,
   Minimize2,
   RefreshCw,
   ArrowRight,
   Star,
   Clock,
   Users,
+  Scissors,
+  Combine,
+  PenTool,
+  Droplets,
 } from "lucide-react";
 import { CheckCircle2 } from "lucide-react";
 import { UploadArea } from "./dashboard/upload-area";
 import { PDFFile } from "./dashboard/recent-files";
+import { toast } from "sonner";
 
 interface User {
   name: string;
@@ -56,48 +53,93 @@ export function Homepage({
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const selectedFiles = Array.from(event.target.files || []);
     if (selectedFiles.length > 0) {
+      // Import the upload API
+      const { uploadFile } = await import("../lib/api");
+
+      for (const file of selectedFiles) {
+        try {
+          await uploadFile(file);
+          toast.success(`${file.name} uploaded successfully`);
+        } catch (error: any) {
+          toast.error(`Failed to upload ${file.name}: ${error.message}`);
+        }
+      }
+
       onFileUpload(selectedFiles);
     }
   };
 
-  const primaryFeatures = [
-    {
-      id: "edit",
-      title: "Edit PDF",
-      description: "Add text, signatures, dates and annotations to your PDFs",
-      icon: FileText,
-      color: "bg-primary text-primary-foreground",
-      action: "Start Editing",
-    },
-  ];
+  // Deprecated: PDF editing experience
+  // const primaryFeatures = [
+  //   {
+  //     id: "edit",
+  //     title: "Edit PDF",
+  //     description: "Add text, signatures, dates and annotations to your PDFs",
+  //     icon: FileText,
+  //     color: "bg-primary text-primary-foreground",
+  //     action: "Start Editing",
+  //   },
+  // ];
 
   const secondaryFeatures = [
     {
-      id: "convert",
-      title: "Convert Files",
-      description: "Convert Word to PDF and other formats",
-      icon: RefreshCw,
-      color: "bg-secondary text-secondary-foreground",
-      action: "Convert Now",
+      id: "signature",
+      title: "Add Signature",
+      description: "Sign PDFs with text signatures",
+      icon: PenTool,
+      color: "bg-blue-500 text-white",
+      action: "Sign PDF",
+      badge: "Limited",
     },
     {
       id: "compress",
       title: "Compress PDF",
       description: "Reduce file size while maintaining quality",
       icon: Minimize2,
-      color: "bg-accent text-accent-foreground",
+      color: "bg-green-500 text-white",
       action: "Compress",
+    },
+    {
+      id: "convert",
+      title: "Convert Files",
+      description: "Convert Word to PDF and other formats",
+      icon: RefreshCw,
+      color: "bg-purple-500 text-white",
+      action: "Convert",
+    },
+    {
+      id: "split",
+      title: "Split PDF",
+      description: "Split PDF into multiple files",
+      icon: Scissors,
+      color: "bg-orange-500 text-white",
+      action: "Split",
+    },
+    {
+      id: "merge",
+      title: "Join PDFs",
+      description: "Combine multiple PDFs into one",
+      icon: Combine,
+      color: "bg-pink-500 text-white",
+      action: "Join",
+    },
+    {
+      id: "watermark",
+      title: "Add Watermark",
+      description: "Protect your documents with watermarks",
+      icon: Droplets,
+      color: "bg-cyan-500 text-white",
+      action: "Watermark",
     },
   ];
 
   const handleFeatureClick = (featureId: string) => {
-    if (featureId === "edit") {
-      // For now, trigger file upload for editing
-      handleQuickUpload();
-    } else if (onNavigateToTool) {
+    if (onNavigateToTool) {
       onNavigateToTool(featureId);
     }
   };
@@ -145,15 +187,8 @@ export function Homepage({
               <Button size="sm" onClick={handleQuickUpload}>
                 Upload PDF <Upload className="ml-2 h-4 w-4" />
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleFeatureClick("edit")}
-              >
-                Try Editor <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
               <Button variant="ghost" size="sm" onClick={handleOpenSample}>
-                Open Sample
+                Open Sample PDF
               </Button>
             </div>
           </div>
@@ -206,33 +241,8 @@ export function Homepage({
                   </div>
                 </div>
 
-                {/* Primary Feature - Edit PDF */}
-                <Card
-                  className="border-2 border-primary/20 hover:shadow-lg transition-all duration-300 cursor-pointer"
-                  onClick={() => handleFeatureClick("edit")}
-                >
-                  <CardHeader className="pb-3 pt-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-primary text-primary-foreground">
-                          <FileText className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg">Edit PDF</CardTitle>
-                          <CardDescription className="text-sm">
-                            Add text, signatures, dates and annotations
-                          </CardDescription>
-                        </div>
-                      </div>
-                      <Button size="sm">
-                        Start Editing <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                </Card>
-
-                {/* Secondary Features */}
-                <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+                {/* PDF Tools - All Features */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {secondaryFeatures.map((feature) => (
                     <Card
                       key={feature.id}
@@ -247,9 +257,19 @@ export function Homepage({
                             >
                               <feature.icon className="h-4 w-4" />
                             </div>
-                            <CardTitle className="text-base">
-                              {feature.title}
-                            </CardTitle>
+                            <div className="flex-1">
+                              <CardTitle className="text-sm">
+                                {feature.title}
+                              </CardTitle>
+                              {feature.badge && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs mt-1"
+                                >
+                                  {feature.badge}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                           <CardDescription className="text-xs">
                             {feature.description}

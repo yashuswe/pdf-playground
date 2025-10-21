@@ -60,7 +60,7 @@ export function FileConverter() {
       // Auto-detect format based on file extension
       const extension = file.name.split(".").pop()?.toLowerCase();
       const detectedFormat = supportedFormats.find(
-        (format) => format.value === extension,
+        (format) => format.value === extension
       );
       if (detectedFormat) {
         setFromFormat(detectedFormat.value);
@@ -106,7 +106,7 @@ export function FileConverter() {
             };
           }
           return j;
-        }),
+        })
       );
     }, 1000);
 
@@ -116,12 +116,12 @@ export function FileConverter() {
         clearInterval(interval);
         setConversionJobs((prev) =>
           prev.map((j) =>
-            j.id === job.id ? { ...j, status: "completed", progress: 100 } : j,
-          ),
+            j.id === job.id ? { ...j, status: "completed", progress: 100 } : j
+          )
         );
         toast.success("File converted successfully");
       },
-      Math.random() * 2000 + 3000,
+      Math.random() * 2000 + 3000
     );
   };
 
@@ -162,6 +162,9 @@ export function FileConverter() {
         <p className="text-muted-foreground">
           Convert between different document formats
         </p>
+        <Badge variant="outline" className="mt-2">
+          Demo Mode - Backend integration coming soon
+        </Badge>
       </div>
 
       <Card>

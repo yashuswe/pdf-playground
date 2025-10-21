@@ -17,8 +17,7 @@ import {
   Home,
   Folder,
 } from "lucide-react";
-
-type AppView = "auth" | "homepage" | "dashboard" | "pdf-viewer" | "pdf-editor";
+import type { AppView } from "../../types/app";
 
 interface HeaderProps {
   user: { name: string; email: string };
