@@ -378,7 +378,7 @@ export function Homepage({
                             <FileText className="h-3 w-3 text-red-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm truncate">{file.name}</p>
+                            <p className="text-sm truncate" title={file.name}>{file.name}</p>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
                               <span>{file.size}</span>
                               {file?.annotations && file.annotations > 0 && (

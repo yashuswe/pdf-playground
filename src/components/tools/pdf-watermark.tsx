@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import {
   listFiles,
   signPDF,
-  getDownloadUrl,
   downloadFileWithWorkaround,
   FileMetadata,
 } from "@/lib/api";
@@ -117,8 +116,9 @@ export function PDFWatermark() {
     try {
       const coords = getPositionCoordinates(position);
 
-      // Calculate gray color based on opacity (0-255 scale)
-      const grayValue = Math.round(255 * (1 - opacity));
+      // Calculate gray color based on opacity (0-1 scale for backend)
+      // Higher opacity = darker watermark, lower opacity = lighter watermark
+      const grayValue = 1 - opacity;
 
       if (applyToAllPages && selectedFile) {
         // Add watermark to all pages
@@ -165,7 +165,27 @@ export function PDFWatermark() {
       // Refresh file list
       await loadFiles();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error);
+      console.error("Watermark error:", error);
+      let message = "Unknown error occurred";
+      
+      if (error instanceof Error) {
+        message = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        // Handle API error objects from ApiClient
+        const errorObj = error as any;
+        if (errorObj.message) {
+          message = errorObj.message;
+        } else if (errorObj.details && errorObj.details.detail) {
+          message = errorObj.details.detail;
+        } else if (errorObj.details && errorObj.details.message) {
+          message = errorObj.details.message;
+        } else {
+          message = `API Error (Status: ${errorObj.status || 'unknown'})`;
+        }
+      } else {
+        message = String(error);
+      }
+      
       toast.error(`Failed to add watermark: ${message}`);
     } finally {
       setIsLoading(false);

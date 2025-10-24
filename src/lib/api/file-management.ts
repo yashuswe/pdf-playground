@@ -79,15 +79,15 @@ export async function downloadFileWithWorkaround(
     // First try the original file_id
     return await client.getBlob(`/files/${fileId}/download`);
   } catch (error: any) {
-    console.log(`Download failed for ${fileId}, trying workarounds...`);
+      console.info(`Download failed for ${fileId}, trying workarounds...`);
 
-    // Try to find the actual file by listing all files and matching by name
-    try {
-      const files = await listFiles();
-      console.log(
-        `Available files:`,
-        files.map((f) => ({ id: f.file_id, name: f.filename }))
-      );
+      // Try to find the actual file by listing all files and matching by name
+      try {
+        const files = await listFiles();
+        console.info(
+          `Available files:`,
+          files.map((f) => ({ id: f.file_id, name: f.filename }))
+        );
 
       // Look for exact filename match first
       let matchingFile = files.find((file) => file.filename === filename);
@@ -104,17 +104,17 @@ export async function downloadFileWithWorkaround(
         );
       }
 
-      if (matchingFile) {
-        console.log(
-          `Found matching file: ${matchingFile.file_id} (${matchingFile.filename}) for ${filename}`
-        );
-        return await client.getBlob(`/files/${matchingFile.file_id}/download`);
-      } else {
-        console.log(`No matching file found for ${filename}`);
-        throw new Error(
-          `No matching file found for ${filename}. Available files: ${files.map((f) => f.filename).join(", ")}`
-        );
-      }
+        if (matchingFile) {
+          console.info(
+            `Found matching file: ${matchingFile.file_id} (${matchingFile.filename}) for ${filename}`
+          );
+          return await client.getBlob(`/files/${matchingFile.file_id}/download`);
+        } else {
+          console.info(`No matching file found for ${filename}`);
+          throw new Error(
+            `No matching file found for ${filename}. Available files: ${files.map((f) => f.filename).join(", ")}`
+          );
+        }
     } catch (listError: any) {
       console.error("Failed to list files for workaround:", listError);
       throw new Error(

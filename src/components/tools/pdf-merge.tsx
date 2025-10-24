@@ -23,7 +23,6 @@ import { toast } from "sonner";
 import {
   listFiles,
   mergePDFs,
-  getDownloadUrl,
   downloadFileWithWorkaround,
   FileMetadata,
 } from "@/lib/api";
@@ -121,7 +120,7 @@ export function PDFMerge() {
 
     try {
       toast.info("Downloading merged file...");
-      console.log(
+      console.info(
         `Attempting to download merged file: ${mergeResult.file_id} (${mergeResult.filename})`
       );
 
@@ -229,8 +228,8 @@ export function PDFMerge() {
                       className="flex items-center gap-2 p-3 border rounded-md"
                     >
                       <Badge variant="outline">{index + 1}</Badge>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">{file.filename}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" title={file.filename}>{file.filename}</p>
                         <p className="text-xs text-muted-foreground">
                           {file.page_count} pages
                         </p>
