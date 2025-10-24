@@ -27,3 +27,5 @@ echo "   - Any types: Replace 'any' with specific types or 'unknown'"
 echo "   - Console.log: Use console.warn() or console.error() instead"
 echo ""
 
+
+

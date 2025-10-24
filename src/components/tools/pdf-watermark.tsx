@@ -12,7 +12,13 @@ import { Label } from "../ui/label";
 import { Badge } from "../ui/badge";
 import { Droplets, Download, FileText, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { listFiles, signPDF, getDownloadUrl, FileMetadata } from "@/lib/api";
+import {
+  listFiles,
+  signPDF,
+  getDownloadUrl,
+  downloadFileWithWorkaround,
+  FileMetadata,
+} from "@/lib/api";
 
 type WatermarkPosition = "center" | "diagonal" | "top" | "bottom" | "custom";
 
@@ -32,7 +38,8 @@ export function PDFWatermark() {
   const [customPage, setCustomPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
-  const [watermarkResult, setWatermarkResult] = useState<WatermarkResult | null>(null);
+  const [watermarkResult, setWatermarkResult] =
+    useState<WatermarkResult | null>(null);
 
   useEffect(() => {
     loadFiles();
@@ -55,6 +62,33 @@ export function PDFWatermark() {
   };
 
   const selectedFile = files.find((f) => f.file_id === selectedFileId);
+
+  const handleDownloadWatermarkedFile = async () => {
+    if (!watermarkResult) return;
+
+    try {
+      toast.info("Downloading watermarked file...");
+      const blob = await downloadFileWithWorkaround(
+        watermarkResult.file_id,
+        watermarkResult.filename
+      );
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = watermarkResult.filename || "watermarked-document.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("File downloaded successfully!");
+    } catch (error: any) {
+      console.error("Download failed:", error);
+      toast.error(`Download failed: ${error.message}`);
+    }
+  };
 
   const getPositionCoordinates = (pos: WatermarkPosition) => {
     // Standard PDF page is typically 612 x 792 points (8.5 x 11 inches)
@@ -369,16 +403,13 @@ export function PDFWatermark() {
                   Watermark: "{watermarkText}"
                 </p>
               </div>
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href={getDownloadUrl(watermarkResult.file_id)}
-                  download
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </a>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadWatermarkedFile}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
               </Button>
             </div>
           </CardContent>

@@ -68,6 +68,63 @@ export function getDownloadUrl(fileId: string): string {
 }
 
 /**
+ * Download a file with workaround for backend bug
+ * For processed files (signed, merged, etc.), tries multiple possible file IDs
+ */
+export async function downloadFileWithWorkaround(
+  fileId: string,
+  filename?: string
+): Promise<Blob> {
+  try {
+    // First try the original file_id
+    return await client.getBlob(`/files/${fileId}/download`);
+  } catch (error: any) {
+    console.log(`Download failed for ${fileId}, trying workarounds...`);
+
+    // Try to find the actual file by listing all files and matching by name
+    try {
+      const files = await listFiles();
+      console.log(
+        `Available files:`,
+        files.map((f) => ({ id: f.file_id, name: f.filename }))
+      );
+
+      // Look for exact filename match first
+      let matchingFile = files.find((file) => file.filename === filename);
+
+      // If no exact match, try partial matches for processed files
+      if (!matchingFile && filename) {
+        matchingFile = files.find(
+          (file) =>
+            file.filename.includes("signed") ||
+            file.filename.includes("merged") ||
+            file.filename.includes("watermarked") ||
+            (file.file_path && file.file_path.includes("_page_1.pdf")) ||
+            file.filename.includes(filename.split(".")[0]) // Match base name
+        );
+      }
+
+      if (matchingFile) {
+        console.log(
+          `Found matching file: ${matchingFile.file_id} (${matchingFile.filename}) for ${filename}`
+        );
+        return await client.getBlob(`/files/${matchingFile.file_id}/download`);
+      } else {
+        console.log(`No matching file found for ${filename}`);
+        throw new Error(
+          `No matching file found for ${filename}. Available files: ${files.map((f) => f.filename).join(", ")}`
+        );
+      }
+    } catch (listError: any) {
+      console.error("Failed to list files for workaround:", listError);
+      throw new Error(
+        `Download failed: ${error.message || "Unknown error"}. List error: ${listError.message || "Unknown list error"}`
+      );
+    }
+  }
+}
+
+/**
  * Delete a file
  */
 export async function deleteFile(fileId: string): Promise<{ message: string }> {

@@ -20,7 +20,13 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { toast } from "sonner";
-import { listFiles, mergePDFs, getDownloadUrl, FileMetadata } from "@/lib/api";
+import {
+  listFiles,
+  mergePDFs,
+  getDownloadUrl,
+  downloadFileWithWorkaround,
+  FileMetadata,
+} from "@/lib/api";
 
 export function PDFMerge() {
   const [files, setFiles] = useState<FileMetadata[]>([]);
@@ -107,6 +113,39 @@ export function PDFMerge() {
       toast.error(`Failed to merge PDFs: ${error.message}`);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDownloadMergedFile = async () => {
+    if (!mergeResult) return;
+
+    try {
+      toast.info("Downloading merged file...");
+      console.log(
+        `Attempting to download merged file: ${mergeResult.file_id} (${mergeResult.filename})`
+      );
+
+      const blob = await downloadFileWithWorkaround(
+        mergeResult.file_id,
+        mergeResult.filename
+      );
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = mergeResult.filename || "merged-document.pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("File downloaded successfully!");
+    } catch (error: any) {
+      console.error("Download failed:", error);
+      const errorMessage =
+        error.message || error.toString() || "Unknown error occurred";
+      toast.error(`Download failed: ${errorMessage}`);
     }
   };
 
@@ -277,16 +316,13 @@ export function PDFMerge() {
                   {mergeResult.source_files} files
                 </p>
               </div>
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href={getDownloadUrl(mergeResult.file_id)}
-                  download
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </a>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadMergedFile}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
               </Button>
             </div>
           </CardContent>
