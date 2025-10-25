@@ -199,7 +199,7 @@ export default function App() {
   if (currentView === "homepage") {
     return (
       <>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen">
           <Header
             user={user!}
             onLogout={handleLogout}
@@ -224,7 +224,7 @@ export default function App() {
   if (currentView === "convert") {
     return (
       <>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen">
           <Header
             user={user!}
             onLogout={handleLogout}
@@ -243,7 +243,7 @@ export default function App() {
   if (currentView === "compress") {
     return (
       <>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen">
           <Header
             user={user!}
             onLogout={handleLogout}
@@ -262,7 +262,7 @@ export default function App() {
   if (currentView === "split") {
     return (
       <>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen">
           <Header
             user={user!}
             onLogout={handleLogout}
@@ -281,7 +281,7 @@ export default function App() {
   if (currentView === "merge") {
     return (
       <>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen">
           <Header
             user={user!}
             onLogout={handleLogout}
@@ -300,7 +300,7 @@ export default function App() {
   if (currentView === "signature") {
     return (
       <>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen">
           <Header
             user={user!}
             onLogout={handleLogout}
@@ -319,7 +319,7 @@ export default function App() {
   if (currentView === "watermark") {
     return (
       <>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen">
           <Header
             user={user!}
             onLogout={handleLogout}
@@ -337,7 +337,7 @@ export default function App() {
 
   return (
     <>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen">
         <Header
           user={user!}
           onLogout={handleLogout}

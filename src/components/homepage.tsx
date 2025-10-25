@@ -171,57 +171,31 @@ export function Homepage({
         <div className="relative h-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
           {/* SaaS Hero */}
           <div className="text-center mb-6">
-            <div className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs text-muted-foreground mb-3 bg-background/60 backdrop-blur">
-              <Star className="h-3.5 w-3.5 text-primary" />
-              Rated 4.9/5 by 500+ users
-            </div>
             <h1 className="text-3xl tracking-tight sm:text-4xl mb-2">
-              The Fast, Modern PDF Editor
-              <span className="block text-primary">Built for Indian SMEs</span>
+              <span className="gradient-text">The Fast, Modern PDF Editor</span>
             </h1>
             <p className="max-w-2xl mx-auto text-muted-foreground mb-4">
               Edit, convert, and compress PDFs with an intuitive, blazing-fast
               experience.
             </p>
             <div className="flex items-center justify-center gap-3">
-              <Button size="sm" onClick={handleQuickUpload}>
+              <Button
+                size="sm"
+                onClick={handleQuickUpload}
+                className="gradient-button"
+              >
                 Upload PDF <Upload className="ml-2 h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleOpenSample}>
-                Open Sample PDF
               </Button>
             </div>
           </div>
 
           {/* Main Content Grid */}
-          <div className="grid lg:grid-cols-3 gap-6 h-[calc(100vh-240px)]">
+          <div className="grid lg:grid-cols-3 gap-6">
             {/* Left Column - Upload & Primary Feature */}
             <div className="lg:col-span-2 space-y-4">
               {/* Quick Upload Area */}
               <div className="mb-4">
-                <UploadArea
-                  onFileUpload={onFileUpload}
-                  className="border-2 border-dashed border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors h-32"
-                />
-                <div className="text-center mt-2">
-                  <p className="text-sm text-muted-foreground">
-                    Or{" "}
-                    <button
-                      onClick={handleQuickUpload}
-                      className="text-primary hover:underline"
-                    >
-                      browse files
-                    </button>
-                  </p>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    multiple
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </div>
+                <UploadArea onFileUpload={onFileUpload} compact={true} />
               </div>
 
               {/* All Features Combined */}
@@ -242,20 +216,20 @@ export function Homepage({
                 </div>
 
                 {/* PDF Tools - All Features */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                   {secondaryFeatures.map((feature) => (
                     <Link key={feature.id} href={feature.route}>
-                      <Card className="hover:shadow-md transition-all duration-300 cursor-pointer">
-                        <CardHeader className="pb-3 pt-4">
-                          <div className="space-y-2">
+                      <Card className="glass-card hover:shadow-md transition-all duration-300 cursor-pointer floating-animation">
+                        <CardHeader className="pb-1 pt-2">
+                          <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <div
-                                className={`p-1.5 rounded-lg ${feature.color}`}
+                                className={`p-1 rounded-lg ${feature.color}`}
                               >
-                                <feature.icon className="h-4 w-4" />
+                                <feature.icon className="h-3 w-3" />
                               </div>
                               <div className="flex-1">
-                                <CardTitle className="text-sm">
+                                <CardTitle className="text-xs font-medium">
                                   {feature.title}
                                 </CardTitle>
                                 {feature.badge && (
@@ -268,13 +242,13 @@ export function Homepage({
                                 )}
                               </div>
                             </div>
-                            <CardDescription className="text-xs">
+                            <CardDescription className="text-xs leading-tight line-clamp-2">
                               {feature.description}
                             </CardDescription>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="w-full mt-2"
+                              className="w-full mt-1 text-xs h-7"
                             >
                               {feature.action}
                             </Button>
@@ -286,7 +260,7 @@ export function Homepage({
                 </div>
 
                 {/* Pro Teaser */}
-                <Card className="border-dashed">
+                <Card className="glass-card border-dashed gradient-border">
                   <CardHeader className="py-3">
                     <div className="flex items-center justify-between">
                       <div>
@@ -296,7 +270,11 @@ export function Homepage({
                           export speeds.
                         </CardDescription>
                       </div>
-                      <Button size="sm" variant="secondary">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="gradient-button"
+                      >
                         Upgrade
                       </Button>
                     </div>
@@ -308,7 +286,7 @@ export function Homepage({
             {/* Right Column - Stats & Recent Files */}
             <div className="space-y-4">
               {/* Onboarding Checklist */}
-              <Card>
+              <Card className="glass-card">
                 <CardHeader className="pb-3 pt-4">
                   <CardTitle className="text-base mb-2">Get Started</CardTitle>
                   <div className="space-y-2 text-sm">
@@ -329,7 +307,7 @@ export function Homepage({
               </Card>
 
               {/* Compact Stats */}
-              <Card>
+              <Card className="glass-card">
                 <CardHeader className="pb-3 pt-4">
                   <CardTitle className="text-base mb-2">
                     Your Progress
@@ -354,7 +332,7 @@ export function Homepage({
 
               {/* Recent Files */}
               {recentFiles.length > 0 && (
-                <Card>
+                <Card className="glass-card">
                   <CardHeader className="pb-3 pt-4 px-3 sm:px-6">
                     <div className="flex items-center justify-between mb-2 gap-2">
                       <CardTitle className="text-sm sm:text-base">

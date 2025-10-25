@@ -37,13 +37,15 @@ export function Header({
   currentView,
 }: HeaderProps) {
   return (
-    <header className="border-b bg-background">
+    <header className="border-b glass-card">
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <FileText className="h-6 w-6 text-primary" />
-              <h1 className="text-xl font-semibold">PDF Editor</h1>
+              <h1 className="text-xl font-semibold gradient-text">
+                PDF Editor
+              </h1>
             </div>
 
             {onNavigate && (

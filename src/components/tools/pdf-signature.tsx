@@ -514,7 +514,7 @@ export function PDFSignature() {
         </TabsList>
 
         <TabsContent value="manual" className="space-y-6">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Select PDF and Page</CardTitle>
               <CardDescription>
@@ -574,7 +574,7 @@ export function PDFSignature() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Signature Details</CardTitle>
               <CardDescription>
@@ -606,7 +606,7 @@ export function PDFSignature() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Position</CardTitle>
               <CardDescription>
@@ -696,7 +696,7 @@ export function PDFSignature() {
         </TabsContent>
 
         <TabsContent value="visual" className="space-y-6">
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Select PDF and Page</CardTitle>
               <CardDescription>
@@ -756,7 +756,7 @@ export function PDFSignature() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Signature Details</CardTitle>
               <CardDescription>
@@ -894,7 +894,7 @@ export function PDFSignature() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="glass-card">
             <CardHeader>
               <CardTitle>Visual Placement</CardTitle>
               <CardDescription>
@@ -914,9 +914,9 @@ export function PDFSignature() {
                 <div className="space-y-4">
                   {/* Page Navigation Controls */}
                   {pdfDocument.numPages > 1 && (
-                    <Card>
+                    <Card className="glass-card">
                       <CardHeader className="pb-3">
-                        <CardTitle className="text-lg">
+                        <CardTitle className="text-lg gradient-text">
                           Page Navigation
                         </CardTitle>
                         <CardDescription>
@@ -1029,9 +1029,9 @@ export function PDFSignature() {
                   )}
 
                   {clickPosition && (
-                    <Card>
+                    <Card className="glass-card">
                       <CardHeader>
-                        <CardTitle className="text-lg">
+                        <CardTitle className="text-lg gradient-text">
                           Adjust Position
                         </CardTitle>
                         <CardDescription>
@@ -1204,7 +1204,7 @@ export function PDFSignature() {
       </Tabs>
 
       {signResult && (
-        <Card>
+        <Card className="glass-card">
           <CardHeader>
             <CardTitle>Signature Added</CardTitle>
             <CardDescription>
