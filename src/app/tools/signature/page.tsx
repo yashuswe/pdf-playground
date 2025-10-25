@@ -3,5 +3,9 @@
 import { PDFSignature } from "@/components/tools/pdf-signature";
 
 export default function SignaturePage() {
-  return <PDFSignature />;
+  return (
+    <div className="min-h-screen">
+      <PDFSignature />
+    </div>
+  );
 }

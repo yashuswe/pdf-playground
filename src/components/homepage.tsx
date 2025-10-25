@@ -239,7 +239,7 @@ export function Homepage({
                             <Button
                               variant="outline"
                               size="sm"
-                              className="w-full mt-1 text-xs h-7"
+                              className="w-full mt-1 text-xs h-7 cta-secondary cta-sm"
                             >
                               {feature.action}
                             </Button>
@@ -264,7 +264,7 @@ export function Homepage({
                       <Button
                         size="sm"
                         variant="secondary"
-                        className="gradient-button"
+                        className="cta-primary cta-sm"
                       >
                         Upgrade
                       </Button>

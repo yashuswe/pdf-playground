@@ -39,11 +39,7 @@ import {
   downloadFileWithWorkaround,
   FileMetadata,
 } from "@/lib/api";
-import * as pdfjsLib from "pdfjs-dist";
-
-// Configure PDF.js worker - use a compatible CDN version
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://unpkg.com/pdfjs-dist@4.10.38/build/pdf.worker.min.js";
+import { loadPDFWithFallback, configurePDFWorker, pdfjsLib } from "@/lib/pdf-worker";
 
 export function PDFSignature() {
   const [files, setFiles] = useState<FileMetadata[]>([]);
@@ -76,7 +72,9 @@ export function PDFSignature() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const signaturePreviewRef = useRef<HTMLDivElement>(null);
 
+  // Initialize PDF worker on component mount
   useEffect(() => {
+    configurePDFWorker();
     loadFiles();
   }, []);
 
@@ -122,48 +120,19 @@ export function PDFSignature() {
     }
 
     setPdfLoading(true);
+    setPdfDocument(null);
+    
     try {
-      const selectedFile = files.find((f) => f.file_id === selectedFileId);
-      if (!selectedFile) {
-        toast.error("Selected file not found");
-        return;
-      }
-
-      // Load PDF using PDF.js
       const pdfUrl = getDownloadUrl(selectedFileId);
-      console.log("Loading PDF from URL:", pdfUrl);
+      console.log("Loading PDF from:", pdfUrl);
 
-      let loadingTask;
-      try {
-        loadingTask = pdfjsLib.getDocument({
-          url: pdfUrl,
-          verbosity: pdfjsLib.VerbosityLevel.ERRORS,
-        });
-      } catch (workerError) {
-        console.warn("CDN worker failed, trying local worker:", workerError);
-        // Try with local worker as fallback
-        pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.js";
-        loadingTask = pdfjsLib.getDocument({
-          url: pdfUrl,
-          verbosity: pdfjsLib.VerbosityLevel.ERRORS,
-        });
-      }
-
-      const pdf = await loadingTask.promise;
-      console.log("PDF loaded successfully:", pdf);
+      const pdf = await loadPDFWithFallback(pdfUrl) as any;
       setPdfDocument(pdf);
 
-      // Render the current page with a small delay to ensure canvas is mounted
-      if (pageNum <= pdf.numPages) {
-        // Small delay to ensure canvas is mounted
-        setTimeout(async () => {
-          await renderPDFPage(pdf, pageNum);
-        }, 100);
-      } else {
-        toast.error(
-          `Page ${pageNum} does not exist. PDF has ${pdf.numPages} pages.`
-        );
-      }
+      // Render the PDF page
+      setTimeout(async () => {
+        await renderPDFPage(pdf, pageNum);
+      }, 100);
     } catch (error: any) {
       console.error("PDF loading error:", error);
       toast.error(`Failed to load PDF: ${error.message}`);
@@ -175,41 +144,20 @@ export function PDFSignature() {
   // Render PDF page to canvas
   const renderPDFPage = useCallback(
     async (pdf: any, pageNumber: number) => {
-      // Cancel any existing render task
-      if (currentRenderTask) {
-        console.log("Cancelling previous render task");
-        currentRenderTask.cancel();
-        setCurrentRenderTask(null);
-      }
-
-      // Wait for canvas to be available
-      let attempts = 0;
-      const maxAttempts = 10;
-
-      while (!canvasRef.current && attempts < maxAttempts) {
-        console.log(`Waiting for canvas ref, attempt ${attempts + 1}`);
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        attempts++;
-      }
-
       if (!canvasRef.current) {
-        console.error("Canvas ref not available after waiting");
-        toast.error("Canvas not ready for PDF rendering");
+        console.log("Canvas not ready, waiting...");
+        setTimeout(() => renderPDFPage(pdf, pageNumber), 100);
         return;
       }
 
       try {
-        console.log(`Rendering page ${pageNumber} of PDF`);
         const page = await pdf.getPage(pageNumber);
         const canvas = canvasRef.current;
         const context = canvas.getContext("2d");
 
-        if (!context) {
-          console.error("Could not get canvas context");
-          return;
-        }
+        if (!context) return;
 
-        // Calculate scale to fit container width (max 800px)
+        // Calculate scale to fit container
         const containerWidth = 800;
         const viewport = page.getViewport({ scale: 1.0 });
         const scale = Math.min(1.0, containerWidth / viewport.width);
@@ -219,27 +167,22 @@ export function PDFSignature() {
         canvas.height = scaledViewport.height;
         canvas.width = scaledViewport.width;
 
-        // Clear canvas completely
+        // Clear and render
         context.clearRect(0, 0, canvas.width, canvas.height);
-
+        
         const renderContext = {
           canvasContext: context,
           viewport: scaledViewport,
         };
 
-        console.log("Starting PDF page render...");
-        const renderTask = page.render(renderContext);
-        setCurrentRenderTask(renderTask);
-        await renderTask.promise;
-        console.log("PDF page rendered successfully");
-        setCurrentRenderTask(null);
+        await page.render(renderContext).promise;
+        console.log("✅ PDF page rendered");
       } catch (error: any) {
-        console.error("Error rendering PDF page:", error);
-        toast.error(`Failed to render PDF page: ${error.message}`);
-        setCurrentRenderTask(null);
+        console.error("Error rendering PDF:", error);
+        toast.error(`Failed to render PDF: ${error.message}`);
       }
     },
-    [currentRenderTask]
+    []
   );
 
   // Handle canvas click for signature placement
@@ -261,35 +204,23 @@ export function PDFSignature() {
     toast.success(`Position set to (${Math.round(x)}, ${Math.round(y)})`);
   };
 
-  // Arrow controls for position adjustment
+  // Move signature position
   const moveSignature = (direction: "up" | "down" | "left" | "right") => {
-    const currentX = clickPosition?.x || xPosition;
-    const currentY = clickPosition?.y || yPosition;
+    if (!clickPosition) return;
 
-    let newX = currentX;
-    let newY = currentY;
+    let newX = clickPosition.x;
+    let newY = clickPosition.y;
 
     switch (direction) {
-      case "up":
-        newY = Math.max(0, currentY - stepSize);
-        break;
-      case "down":
-        newY = currentY + stepSize;
-        break;
-      case "left":
-        newX = Math.max(0, currentX - stepSize);
-        break;
-      case "right":
-        newX = currentX + stepSize;
-        break;
+      case "up": newY = Math.max(0, newY - stepSize); break;
+      case "down": newY = newY + stepSize; break;
+      case "left": newX = Math.max(0, newX - stepSize); break;
+      case "right": newX = newX + stepSize; break;
     }
 
     setClickPosition({ x: newX, y: newY });
     setXPosition(Math.round(newX));
     setYPosition(Math.round(newY));
-
-    // Update signature preview position
-    updateSignaturePreview(newX, newY);
   };
 
   // Start continuous movement
@@ -516,7 +447,7 @@ export function PDFSignature() {
         <TabsContent value="manual" className="space-y-6">
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle>Select PDF and Page</CardTitle>
+              <CardTitle className="gradient-text">Select PDF and Page</CardTitle>
               <CardDescription>
                 Choose the PDF file and page where you want to add the signature
               </CardDescription>
@@ -574,7 +505,7 @@ export function PDFSignature() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card>
             <CardHeader>
               <CardTitle>Signature Details</CardTitle>
               <CardDescription>
@@ -606,7 +537,7 @@ export function PDFSignature() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card>
             <CardHeader>
               <CardTitle>Position</CardTitle>
               <CardDescription>
@@ -685,18 +616,23 @@ export function PDFSignature() {
                 className="w-full"
               >
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Adding Signature...
+                  </>
                 ) : (
-                  <PenTool className="h-4 w-4 mr-2" />
+                  <>
+                    <PenTool className="h-4 w-4 mr-2" />
+                    Add Signature
+                  </>
                 )}
-                {isLoading ? "Adding Signature..." : "Add Signature"}
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="visual" className="space-y-6">
-          <Card className="glass-card">
+          <Card>
             <CardHeader>
               <CardTitle>Select PDF and Page</CardTitle>
               <CardDescription>
@@ -756,7 +692,7 @@ export function PDFSignature() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card>
             <CardHeader>
               <CardTitle>Signature Details</CardTitle>
               <CardDescription>
@@ -894,7 +830,7 @@ export function PDFSignature() {
             </CardContent>
           </Card>
 
-          <Card className="glass-card">
+          <Card>
             <CardHeader>
               <CardTitle>Visual Placement</CardTitle>
               <CardDescription>
@@ -908,6 +844,17 @@ export function PDFSignature() {
                   <div className="text-center">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
                     <p>Loading PDF...</p>
+                    <Button 
+                      onClick={() => {
+                        setPdfLoading(false);
+                        setPdfDocument(null);
+                      }}
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                    >
+                      Cancel Loading
+                    </Button>
                   </div>
                 </div>
               ) : pdfDocument ? (
@@ -1149,11 +1096,16 @@ export function PDFSignature() {
                     className="w-full"
                   >
                     {isLoading ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Adding Signature...
+                      </>
                     ) : (
-                      <PenTool className="h-4 w-4 mr-2" />
+                      <>
+                        <PenTool className="h-4 w-4 mr-2" />
+                        Add Signature
+                      </>
                     )}
-                    {isLoading ? "Adding Signature..." : "Add Signature"}
                   </Button>
                 </div>
               ) : (
@@ -1161,7 +1113,7 @@ export function PDFSignature() {
                   <p className="text-muted-foreground mb-4">PDF not loaded</p>
                   <div className="space-y-4">
                     <div className="flex gap-2 justify-center">
-                      <Button onClick={loadPDF} variant="outline">
+                      <Button onClick={loadPDF} variant="outline" className="cta-secondary cta-sm">
                         Load PDF
                       </Button>
                       <Button
@@ -1204,7 +1156,7 @@ export function PDFSignature() {
       </Tabs>
 
       {signResult && (
-        <Card className="glass-card">
+        <Card>
           <CardHeader>
             <CardTitle>Signature Added</CardTitle>
             <CardDescription>
@@ -1251,11 +1203,16 @@ export function PDFSignature() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Downloading...
+                  </>
                 ) : (
-                  <Download className="h-4 w-4 mr-2" />
+                  <>
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </>
                 )}
-                {isLoading ? "Downloading..." : "Download"}
               </Button>
             </div>
           </CardContent>

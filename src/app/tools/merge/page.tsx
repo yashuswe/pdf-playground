@@ -3,5 +3,9 @@
 import { PDFMerge } from "@/components/tools/pdf-merge";
 
 export default function MergePage() {
-  return <PDFMerge />;
+  return (
+    <div className="min-h-screen">
+      <PDFMerge />
+    </div>
+  );
 }

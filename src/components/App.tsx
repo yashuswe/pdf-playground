@@ -68,7 +68,13 @@ export default function App() {
 
   useEffect(() => {
     // Configure PDF.js worker first
-    configurePDFWorker();
+    configurePDFWorker().then((success) => {
+      if (success) {
+        console.log("✅ PDF.js worker configured successfully");
+      } else {
+        console.warn("⚠️ PDF.js worker configuration failed, using fallback");
+      }
+    });
 
     // If a user was previously saved, restore it; otherwise keep Guest
     const savedUser = localStorage.getItem("pdf-editor-user");

@@ -213,19 +213,15 @@ export function UploadArea({
                   asChild
                   disabled={isUploading}
                   className={cn(
-                    "gradient-button transition-all duration-300",
-                    isUploading && "opacity-50 cursor-not-allowed"
+                    "cta-primary cta-md cta-with-icon transition-all duration-300",
+                    isUploading && "cta-loading opacity-50 cursor-not-allowed"
                   )}
                 >
                   <label
                     htmlFor="file-upload"
                     className="cursor-pointer flex items-center gap-2"
                   >
-                    {isUploading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <FileText className="h-4 w-4" />
-                    )}
+                    {!isUploading && <FileText className="h-4 w-4 cta-icon" />}
                     {isUploading ? "Uploading..." : "Choose Files"}
                   </label>
                 </Button>
