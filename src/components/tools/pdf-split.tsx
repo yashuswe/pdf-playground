@@ -203,14 +203,15 @@ export function PDFSplit() {
                       type="number"
                       min={1}
                       max={selectedFile?.page_count || 999}
-                      value={range.start}
-                      onChange={(e) =>
+                      value={isNaN(range.start) ? "" : range.start}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
                         updatePageRange(
                           index,
                           "start",
-                          parseInt(e.target.value)
-                        )
-                      }
+                          isNaN(value) ? 1 : value
+                        );
+                      }}
                     />
                   </div>
                   <div className="space-y-1">
@@ -219,10 +220,11 @@ export function PDFSplit() {
                       type="number"
                       min={1}
                       max={selectedFile?.page_count || 999}
-                      value={range.end}
-                      onChange={(e) =>
-                        updatePageRange(index, "end", parseInt(e.target.value))
-                      }
+                      value={isNaN(range.end) ? "" : range.end}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        updatePageRange(index, "end", isNaN(value) ? 1 : value);
+                      }}
                     />
                   </div>
                   <div className="space-y-1">

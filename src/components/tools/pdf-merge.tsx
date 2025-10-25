@@ -229,7 +229,12 @@ export function PDFMerge() {
                     >
                       <Badge variant="outline">{index + 1}</Badge>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate" title={file.filename}>{file.filename}</p>
+                        <p
+                          className="text-sm font-medium truncate"
+                          title={file.filename}
+                        >
+                          {file.filename}
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           {file.page_count} pages
                         </p>

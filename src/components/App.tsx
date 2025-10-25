@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { LoginForm } from "./auth/login-form";
 import { SignupForm } from "./auth/signup-form";
 import { Dashboard } from "./dashboard";
@@ -26,6 +27,7 @@ interface User {
 type AuthMode = "login" | "signup";
 
 export default function App() {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>({
     name: "Guest",
     email: "guest@example.com",
@@ -143,16 +145,18 @@ export default function App() {
   };
 
   const handleNavigateToTool = (tool: string) => {
-    const validTools = [
-      "convert",
-      "compress",
-      "split",
-      "merge",
-      "signature",
-      "watermark",
-    ];
-    if (validTools.includes(tool)) {
-      setCurrentView(tool as AppView);
+    const toolRoutes: Record<string, string> = {
+      convert: "/tools/convert",
+      compress: "/tools/compress",
+      split: "/tools/split",
+      merge: "/tools/merge",
+      signature: "/tools/signature",
+      watermark: "/tools/watermark",
+    };
+
+    const route = toolRoutes[tool];
+    if (route) {
+      router.push(route);
     }
   };
 
@@ -210,7 +214,6 @@ export default function App() {
             onFileUpload={handleFileUpload}
             onOpenFile={handleOpenFile}
             onOpenEditor={handleOpenFile}
-            onNavigateToTool={handleNavigateToTool}
           />
         </div>
         <Toaster />

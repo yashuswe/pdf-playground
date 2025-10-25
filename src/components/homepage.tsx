@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import Link from "next/link";
 import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -44,7 +45,6 @@ export function Homepage({
   onOpenFile,
   onOpenEditor,
   files,
-  onNavigateToTool,
 }: HomepageProps) {
   const [activeFeature, setActiveFeature] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -95,6 +95,7 @@ export function Homepage({
       color: "bg-blue-500 text-white",
       action: "Sign PDF",
       badge: "Limited",
+      route: "/tools/signature",
     },
     {
       id: "compress",
@@ -103,6 +104,7 @@ export function Homepage({
       icon: Minimize2,
       color: "bg-green-500 text-white",
       action: "Compress",
+      route: "/tools/compress",
     },
     {
       id: "convert",
@@ -111,6 +113,7 @@ export function Homepage({
       icon: RefreshCw,
       color: "bg-purple-500 text-white",
       action: "Convert",
+      route: "/tools/convert",
     },
     {
       id: "split",
@@ -119,6 +122,7 @@ export function Homepage({
       icon: Scissors,
       color: "bg-orange-500 text-white",
       action: "Split",
+      route: "/tools/split",
     },
     {
       id: "merge",
@@ -127,6 +131,7 @@ export function Homepage({
       icon: Combine,
       color: "bg-pink-500 text-white",
       action: "Join",
+      route: "/tools/merge",
     },
     {
       id: "watermark",
@@ -135,14 +140,9 @@ export function Homepage({
       icon: Droplets,
       color: "bg-cyan-500 text-white",
       action: "Watermark",
+      route: "/tools/watermark",
     },
   ];
-
-  const handleFeatureClick = (featureId: string) => {
-    if (onNavigateToTool) {
-      onNavigateToTool(featureId);
-    }
-  };
 
   const stats = [
     { label: "Files Processed", value: "2.4K+", icon: FileText },
@@ -244,46 +244,44 @@ export function Homepage({
                 {/* PDF Tools - All Features */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {secondaryFeatures.map((feature) => (
-                    <Card
-                      key={feature.id}
-                      className="hover:shadow-md transition-all duration-300 cursor-pointer"
-                      onClick={() => handleFeatureClick(feature.id)}
-                    >
-                      <CardHeader className="pb-3 pt-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className={`p-1.5 rounded-lg ${feature.color}`}
+                    <Link key={feature.id} href={feature.route}>
+                      <Card className="hover:shadow-md transition-all duration-300 cursor-pointer">
+                        <CardHeader className="pb-3 pt-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={`p-1.5 rounded-lg ${feature.color}`}
+                              >
+                                <feature.icon className="h-4 w-4" />
+                              </div>
+                              <div className="flex-1">
+                                <CardTitle className="text-sm">
+                                  {feature.title}
+                                </CardTitle>
+                                {feature.badge && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs mt-1"
+                                  >
+                                    {feature.badge}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <CardDescription className="text-xs">
+                              {feature.description}
+                            </CardDescription>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full mt-2"
                             >
-                              <feature.icon className="h-4 w-4" />
-                            </div>
-                            <div className="flex-1">
-                              <CardTitle className="text-sm">
-                                {feature.title}
-                              </CardTitle>
-                              {feature.badge && (
-                                <Badge
-                                  variant="outline"
-                                  className="text-xs mt-1"
-                                >
-                                  {feature.badge}
-                                </Badge>
-                              )}
-                            </div>
+                              {feature.action}
+                            </Button>
                           </div>
-                          <CardDescription className="text-xs">
-                            {feature.description}
-                          </CardDescription>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="w-full mt-2"
-                          >
-                            {feature.action}
-                          </Button>
-                        </div>
-                      </CardHeader>
-                    </Card>
+                        </CardHeader>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
 
@@ -357,12 +355,16 @@ export function Homepage({
               {/* Recent Files */}
               {recentFiles.length > 0 && (
                 <Card>
-                  <CardHeader className="pb-3 pt-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <CardTitle className="text-base">
+                  <CardHeader className="pb-3 pt-4 px-3 sm:px-6">
+                    <div className="flex items-center justify-between mb-2 gap-2">
+                      <CardTitle className="text-sm sm:text-base">
                         Continue Working
                       </CardTitle>
-                      <Button variant="ghost" size="sm" className="text-xs p-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs p-1 h-auto"
+                      >
                         View All
                       </Button>
                     </div>
@@ -374,19 +376,26 @@ export function Homepage({
                           className="flex items-start gap-2 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
                           onClick={() => onOpenFile(file)}
                         >
-                          <div className="p-1 bg-red-100 rounded">
-                            <FileText className="h-3 w-3 text-red-600" />
+                          <div className="p-1 bg-red-100 rounded flex-shrink-0">
+                            <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-red-600" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm truncate" title={file.name}>{file.name}</p>
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <span>{file.size}</span>
+                          <div className="flex-1 min-w-0 overflow-hidden">
+                            <p
+                              className="text-xs sm:text-sm truncate font-medium"
+                              title={file.name}
+                            >
+                              {file.name}
+                            </p>
+                            <div className="flex items-center gap-1 text-[10px] sm:text-xs text-muted-foreground flex-wrap">
+                              <span className="truncate max-w-[80px] sm:max-w-none">
+                                {file.size}
+                              </span>
                               {file?.annotations && file.annotations > 0 && (
                                 <>
-                                  <span>•</span>
+                                  <span className="hidden sm:inline">•</span>
                                   <Badge
                                     variant="secondary"
-                                    className="text-xs py-0 px-1"
+                                    className="text-[10px] sm:text-xs py-0 px-1 h-auto"
                                   >
                                     {file.annotations}
                                   </Badge>

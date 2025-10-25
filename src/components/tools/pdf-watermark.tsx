@@ -167,10 +167,10 @@ export function PDFWatermark() {
     } catch (error: unknown) {
       console.error("Watermark error:", error);
       let message = "Unknown error occurred";
-      
+
       if (error instanceof Error) {
         message = error.message;
-      } else if (typeof error === 'object' && error !== null) {
+      } else if (typeof error === "object" && error !== null) {
         // Handle API error objects from ApiClient
         const errorObj = error as any;
         if (errorObj.message) {
@@ -180,12 +180,12 @@ export function PDFWatermark() {
         } else if (errorObj.details && errorObj.details.message) {
           message = errorObj.details.message;
         } else {
-          message = `API Error (Status: ${errorObj.status || 'unknown'})`;
+          message = `API Error (Status: ${errorObj.status || "unknown"})`;
         }
       } else {
         message = String(error);
       }
-      
+
       toast.error(`Failed to add watermark: ${message}`);
     } finally {
       setIsLoading(false);
