@@ -124,39 +124,70 @@ export function PDFWatermark() {
         // Add watermark to all pages
         let lastResult: WatermarkResult | null = null;
         let currentFileId = selectedFileId;
+        let successCount = 0;
+        let failedPages: number[] = [];
 
         for (let page = 1; page <= selectedFile.page_count; page++) {
-          lastResult = (await signPDF({
-            file_id: currentFileId,
-            page_num: page,
-            x: coords.x,
-            y: coords.y,
-            text: watermarkText,
-            font_size: fontSize,
-            color: [grayValue, grayValue, grayValue],
-          })) as WatermarkResult;
+          try {
+            if (!currentFileId) {
+              console.error(`Invalid file_id for page ${page}`);
+              failedPages.push(page);
+              continue;
+            }
+            
+            const requestData = {
+              file_id: currentFileId,
+              page_num: page,
+              x: coords.x,
+              y: coords.y,
+              text: watermarkText,
+              font_size: fontSize,
+              color: [grayValue, grayValue, grayValue] as [number, number, number],
+            };
+            console.log(`Sending watermark request for page ${page}:`, requestData);
+            
+            lastResult = (await signPDF(requestData)) as WatermarkResult;
+            successCount++;
 
-          // Use the new file_id for subsequent pages
-          if (page < selectedFile.page_count && lastResult) {
-            currentFileId = lastResult.file_id;
+            // Use the new file_id for subsequent pages
+            if (page < selectedFile.page_count && lastResult && lastResult.file_id) {
+              currentFileId = lastResult.file_id;
+            }
+          } catch (pageError: any) {
+            console.error(`Failed to add watermark to page ${page}:`, pageError);
+            failedPages.push(page);
+            // Continue with next page instead of stopping
           }
         }
 
-        setWatermarkResult(lastResult);
-        toast.success(
-          `Watermark added to all ${selectedFile.page_count} pages`
-        );
+        if (successCount > 0) {
+          setWatermarkResult(lastResult);
+          if (failedPages.length > 0) {
+            toast.warning(
+              `Watermark added to ${successCount} pages. Failed on pages: ${failedPages.join(', ')}`
+            );
+          } else {
+            toast.success(
+              `Watermark added to all ${selectedFile.page_count} pages`
+            );
+          }
+        } else {
+          throw new Error("Failed to add watermark to any pages");
+        }
       } else {
         // Add watermark to single page
-        const result = (await signPDF({
+        const requestData = {
           file_id: selectedFileId,
           page_num: customPage,
           x: coords.x,
           y: coords.y,
           text: watermarkText,
           font_size: fontSize,
-          color: [grayValue, grayValue, grayValue],
-        })) as WatermarkResult;
+          color: [grayValue, grayValue, grayValue] as [number, number, number],
+        };
+        console.log("Sending watermark request:", requestData);
+        
+        const result = (await signPDF(requestData)) as WatermarkResult;
 
         setWatermarkResult(result);
         toast.success(`Watermark added to page ${customPage}`);
@@ -164,29 +195,9 @@ export function PDFWatermark() {
 
       // Refresh file list
       await loadFiles();
-    } catch (error: unknown) {
+    } catch (error: any) {
       console.error("Watermark error:", error);
-      let message = "Unknown error occurred";
-
-      if (error instanceof Error) {
-        message = error.message;
-      } else if (typeof error === "object" && error !== null) {
-        // Handle API error objects from ApiClient
-        const errorObj = error as any;
-        if (errorObj.message) {
-          message = errorObj.message;
-        } else if (errorObj.details && errorObj.details.detail) {
-          message = errorObj.details.detail;
-        } else if (errorObj.details && errorObj.details.message) {
-          message = errorObj.details.message;
-        } else {
-          message = `API Error (Status: ${errorObj.status || "unknown"})`;
-        }
-      } else {
-        message = String(error);
-      }
-
-      toast.error(`Failed to add watermark: ${message}`);
+      toast.error(`Failed to add watermark: ${error.message || "Unknown error"}`);
     } finally {
       setIsLoading(false);
     }

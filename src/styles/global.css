@@ -129,69 +129,9 @@
 
   body {
     @apply text-foreground;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: var(--background);
     min-height: 100vh;
     position: relative;
-  }
-
-  /* Professional gradient background system */
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background:
-      radial-gradient(
-        circle at 20% 80%,
-        rgba(120, 119, 198, 0.3) 0%,
-        transparent 50%
-      ),
-      radial-gradient(
-        circle at 80% 20%,
-        rgba(255, 119, 198, 0.15) 0%,
-        transparent 50%
-      ),
-      radial-gradient(
-        circle at 40% 40%,
-        rgba(120, 219, 255, 0.2) 0%,
-        transparent 50%
-      ),
-      linear-gradient(
-        135deg,
-        #667eea 0%,
-        #764ba2 25%,
-        #f093fb 50%,
-        #f5576c 75%,
-        #4facfe 100%
-      );
-    background-size: 400% 400%;
-    animation: gradientShift 15s ease infinite;
-    z-index: -2;
-  }
-
-  /* Animated overlay for depth */
-  body::after {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background:
-      radial-gradient(
-        circle at 60% 20%,
-        rgba(255, 255, 255, 0.1) 0%,
-        transparent 30%
-      ),
-      radial-gradient(
-        circle at 30% 70%,
-        rgba(255, 255, 255, 0.05) 0%,
-        transparent 40%
-      );
-    animation: floatOverlay 20s ease-in-out infinite;
-    z-index: -1;
   }
 
   @keyframes gradientShift {
@@ -203,16 +143,6 @@
     }
     100% {
       background-position: 0% 50%;
-    }
-  }
-
-  @keyframes floatOverlay {
-    0%,
-    100% {
-      transform: translateY(0px) rotate(0deg);
-    }
-    50% {
-      transform: translateY(-20px) rotate(1deg);
     }
   }
 }
