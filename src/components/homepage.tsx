@@ -178,15 +178,6 @@ export function Homepage({
               Edit, convert, and compress PDFs with an intuitive, blazing-fast
               experience.
             </p>
-            <div className="flex items-center justify-center gap-3">
-              <Button
-                size="sm"
-                onClick={handleQuickUpload}
-                className="gradient-button"
-              >
-                Upload PDF <Upload className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
           </div>
 
           {/* Main Content Grid */}
